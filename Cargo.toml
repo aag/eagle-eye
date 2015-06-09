@@ -1,0 +1,4 @@
+[package]
+name = "sasshawk"
+version = "0.1.0"
+authors = ["Adam Goforth <code@adamgoforth.com>"]
