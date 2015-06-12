@@ -1,4 +1,9 @@
 [package]
-name = "sasshawk"
+name = "eagle"
 version = "0.1.0"
 authors = ["Adam Goforth <code@adamgoforth.com>"]
+
+[dependencies]
+inotify = "0.1.12"
+libc = "0.1.8"
+rand = "0.3.8"
