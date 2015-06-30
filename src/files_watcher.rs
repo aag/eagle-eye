@@ -7,6 +7,7 @@ use inotify::wrapper::Watch;
 use inotify::ffi::*;
 
 use std::collections::HashMap;
+use std::io;
 use std::path::PathBuf;
 
 pub struct FilesWatcher {
@@ -16,7 +17,9 @@ pub struct FilesWatcher {
 
 impl FilesWatcher {
     pub fn new() -> FilesWatcher {
-        let inotify = INotify::init().unwrap();
+        let inotify = INotify::init().ok().expect(
+            "Fatal Error: Could not initialize inotify."
+        );
 
         FilesWatcher { 
             inotify: inotify,
@@ -25,24 +28,38 @@ impl FilesWatcher {
     }
 
     pub fn add_file(&mut self, path: PathBuf) {
-        let watch_id = self.inotify.add_watch(&path, IN_MODIFY | IN_DELETE).unwrap();
-        self.watches.insert(watch_id, path);
+        let watch_id = self.inotify.add_watch(&path, IN_MODIFY | IN_DELETE);
+
+        if watch_id.is_ok() {
+           self.watches.insert(watch_id.unwrap(), path);
+        } else {
+            println!("Error adding watch for file: {:?}", watch_id.err());
+        }
     }
 
-    pub fn wait_for_events(&mut self) -> Vec<EventPath> {
-        let events = self.inotify.wait_for_events().unwrap();
+    pub fn wait_for_events(&mut self) -> io::Result<Vec<EventPath>> {
+        let events = try!(self.inotify.wait_for_events());
         
         let mut event_paths: Vec<EventPath> = vec![];
         for event in events.iter() {
-            let path: PathBuf = self.watches.get(&event.wd).unwrap().clone();
-            event_paths.push(EventPath::new(path, event.clone()));
+            let path = self.watches.get(&event.wd);
+            if path.is_some() {
+                event_paths.push(EventPath::new(
+                    path.unwrap().clone(),
+                    event.clone()
+                ));
+            } else {
+                println!("Error: no path for watch: {:?}", event.wd);
+            }
         }
 
-        event_paths
+        Ok(event_paths)
     }
 
     pub fn close(&mut self) {
-        self.inotify.close().unwrap();
+        self.inotify.close().ok().expect(
+            "Fatal Error: Could not close inotify."
+        );
     }
 }
 
@@ -86,7 +103,7 @@ mod test {
         write_to(&mut file);
 
         {
-            let event_paths = fw.wait_for_events();
+            let event_paths = fw.wait_for_events().unwrap();
             assert_eq!(1, event_paths.len());
             for event_path in event_paths.iter() {
                 assert_eq!(filepath, event_path.path);
@@ -116,7 +133,7 @@ mod test {
         write_to(&mut file2);
 
         {
-            let event_paths = fw.wait_for_events();
+            let event_paths = fw.wait_for_events().unwrap();
             assert_eq!(2, event_paths.len());
             for event_path in event_paths.iter() {
                 assert!(filepath1 == event_path.path || filepath2 == event_path.path);
