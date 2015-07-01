@@ -45,8 +45,8 @@ impl FilesWatcher {
             let path = self.watches.get(&event.wd);
             if path.is_some() {
                 event_paths.push(EventPath::new(
-                    path.unwrap().clone(),
-                    event.clone()
+                    path.unwrap(),
+                    event
                 ));
             } else {
                 println!("Error: no path for watch: {:?}", event.wd);
@@ -63,13 +63,13 @@ impl FilesWatcher {
     }
 }
 
-pub struct EventPath {
-    event: Event,
-    path: PathBuf
+pub struct EventPath<'a> {
+    event: &'a Event,
+    path: &'a PathBuf
 }
 
-impl EventPath {
-    fn new(path: PathBuf, event: Event) -> EventPath {
+impl <'a>EventPath<'a> {
+    fn new(path: &'a PathBuf, event: &'a Event) -> EventPath<'a> {
         EventPath {
             event: event,
             path: path
@@ -106,7 +106,7 @@ mod test {
             let event_paths = fw.wait_for_events().unwrap();
             assert_eq!(1, event_paths.len());
             for event_path in event_paths.iter() {
-                assert_eq!(filepath, event_path.path);
+                assert_eq!(&filepath, event_path.path);
             }
         }
 
@@ -136,7 +136,7 @@ mod test {
             let event_paths = fw.wait_for_events().unwrap();
             assert_eq!(2, event_paths.len());
             for event_path in event_paths.iter() {
-                assert!(filepath1 == event_path.path || filepath2 == event_path.path);
+                assert!(&filepath1 == event_path.path || &filepath2 == event_path.path);
             }
         }
 
