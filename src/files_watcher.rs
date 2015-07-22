@@ -10,6 +10,8 @@ use std::collections::HashMap;
 use std::io;
 use std::path::PathBuf;
 
+use actions::Action;
+
 pub struct FilesWatcher {
     inotify: INotify,
     watches: HashMap<Watch, PathBuf>
@@ -27,7 +29,7 @@ impl FilesWatcher {
         }
     }
 
-    pub fn add_file(&mut self, path: PathBuf) {
+    pub fn add_file<T: Action>(&mut self, path: PathBuf, actions: Vec<Box<T>>) {
         let watch_id = self.inotify.add_watch(&path, IN_MODIFY | IN_DELETE);
 
         if watch_id.is_ok() {
@@ -64,8 +66,8 @@ impl FilesWatcher {
 }
 
 pub struct EventPath<'a> {
-    event: &'a Event,
-    path: &'a PathBuf
+    pub event: &'a Event,
+    pub path: &'a PathBuf
 }
 
 impl <'a>EventPath<'a> {
@@ -91,6 +93,8 @@ mod test {
     use std::io::Write;
     use std::path::Path;
     use std::path::PathBuf;
+    use actions::print::PrintAction;
+
 
     #[test]
     fn watch_a_single_file() {
@@ -98,7 +102,8 @@ mod test {
         let filepath = path.clone();
 
         let mut fw = FilesWatcher::new();
-        fw.add_file(path);
+        let actions: Vec<Box<PrintAction>> = Vec::new();
+        fw.add_file(path, actions);
 
         write_to(&mut file);
 
@@ -124,10 +129,12 @@ mod test {
 
         let filepath1 = path1.clone();
         let filepath2 = path2.clone();
+        let actions1: Vec<Box<PrintAction>> = Vec::new();
+        let actions2: Vec<Box<PrintAction>> = Vec::new();
 
         let mut fw = FilesWatcher::new();
-        fw.add_file(path1);
-        fw.add_file(path2);
+        fw.add_file(path1, actions1);
+        fw.add_file(path2, actions2);
 
         write_to(&mut file1);
         write_to(&mut file2);
