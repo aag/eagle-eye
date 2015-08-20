@@ -6,15 +6,35 @@ use inotify::wrapper::Event;
 use inotify::wrapper::Watch;
 use inotify::ffi::*;
 
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::io;
 use std::path::PathBuf;
 
 use actions::Action;
 
+pub struct EventPath<'a> {
+    pub event: &'a Event,
+    pub path: &'a PathBuf
+}
+
+impl <'a>EventPath<'a> {
+    fn new(path: &'a PathBuf, event: &'a Event) -> EventPath<'a> {
+        EventPath {
+            event: event,
+            path: path
+        }
+    }
+}
+
+pub struct PathActions {
+    pub path: PathBuf,
+    pub actions: Vec<Box<Action>>
+}
+
 pub struct FilesWatcher {
     inotify: INotify,
-    watches: HashMap<Watch, PathBuf>
+    watches: HashMap<Watch, PathActions>
 }
 
 impl FilesWatcher {
@@ -29,11 +49,12 @@ impl FilesWatcher {
         }
     }
 
-    pub fn add_file<T: Action>(&mut self, path: PathBuf, actions: Vec<Box<T>>) {
+    pub fn add_file(&mut self, path: PathBuf, actions: Vec<Box<Action>>) {
         let watch_id = self.inotify.add_watch(&path, IN_MODIFY | IN_DELETE);
 
         if watch_id.is_ok() {
-           self.watches.insert(watch_id.unwrap(), path);
+            let path_actions = PathActions { path: path, actions: actions };
+            self.watches.insert(watch_id.unwrap(), path_actions);
         } else {
             println!("Error adding watch for file: {:?}", watch_id.err());
         }
@@ -44,10 +65,10 @@ impl FilesWatcher {
         
         let mut event_paths: Vec<EventPath> = vec![];
         for event in events.iter() {
-            let path = self.watches.get(&event.wd);
-            if path.is_some() {
+            let path_actions = self.watches.get(&event.wd);
+            if path_actions.is_some() {
                 event_paths.push(EventPath::new(
-                    path.unwrap(),
+                    path_actions.unwrap().path.borrow(),
                     event
                 ));
             } else {
@@ -65,19 +86,6 @@ impl FilesWatcher {
     }
 }
 
-pub struct EventPath<'a> {
-    pub event: &'a Event,
-    pub path: &'a PathBuf
-}
-
-impl <'a>EventPath<'a> {
-    fn new(path: &'a PathBuf, event: &'a Event) -> EventPath<'a> {
-        EventPath {
-            event: event,
-            path: path
-        }
-    }
-}
 
 
 #[cfg(test)]
@@ -93,8 +101,7 @@ mod test {
     use std::io::Write;
     use std::path::Path;
     use std::path::PathBuf;
-    use actions::print::PrintAction;
-
+    use actions::Action;
 
     #[test]
     fn watch_a_single_file() {
@@ -102,7 +109,7 @@ mod test {
         let filepath = path.clone();
 
         let mut fw = FilesWatcher::new();
-        let actions: Vec<Box<PrintAction>> = Vec::new();
+        let actions: Vec<Box<Action + 'static>> = Vec::new();
         fw.add_file(path, actions);
 
         write_to(&mut file);
@@ -115,8 +122,8 @@ mod test {
             }
         }
 
-        for path in fw.watches.values() {
-            remove_temp_file(path);
+        for (_, path_actions) in &fw.watches {
+            remove_temp_file(&path_actions.path);
         }
         fw.close();
     }
@@ -129,8 +136,8 @@ mod test {
 
         let filepath1 = path1.clone();
         let filepath2 = path2.clone();
-        let actions1: Vec<Box<PrintAction>> = Vec::new();
-        let actions2: Vec<Box<PrintAction>> = Vec::new();
+        let actions1: Vec<Box<Action + 'static>> = Vec::new();
+        let actions2: Vec<Box<Action + 'static>> = Vec::new();
 
         let mut fw = FilesWatcher::new();
         fw.add_file(path1, actions1);
@@ -147,8 +154,8 @@ mod test {
             }
         }
 
-        for path in fw.watches.values() {
-            remove_temp_file(path);
+        for (_, path_actions) in &fw.watches {
+            remove_temp_file(&path_actions.path);
         }
         fw.close();
     }

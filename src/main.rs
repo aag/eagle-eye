@@ -1,5 +1,6 @@
 extern crate inotify;
 
+use actions::Action;
 use actions::print::PrintAction;
 use files_watcher::FilesWatcher;
 use std::path::PathBuf;
@@ -11,7 +12,7 @@ pub mod actions;
 #[cfg_attr(test, allow(dead_code))]
 fn main() {
     let print = PrintAction::new();
-    let actions = vec![Box::new(print)];
+    let actions: Vec<Box<Action + 'static>> = vec![Box::new(print)];
 
     let mut fw = FilesWatcher::new();
 
