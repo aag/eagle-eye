@@ -10,7 +10,7 @@ impl PrintAction {
 }
 
 impl Action for PrintAction {
-    fn handle_change(&self, event_path: EventPath) {
+    fn handle_change(&self, event_path: &EventPath) {
         println!("{} changed", event_path.path.to_str().unwrap());
     }
 }

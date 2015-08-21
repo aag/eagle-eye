@@ -19,5 +19,15 @@ fn main() {
     let path_buf = PathBuf::from("/tmp/testfile.txt");
     fw.add_file(path_buf, actions);
 
-    fw.close();
+    loop {
+        let result = fw.wait_and_execute();
+
+        match result {
+            Ok(i) => println!("Executed {} action(s) successfully.", i),
+            Err(_) => println!("Error executing some actions.")
+        }
+    }
+
+    // Uncomment this as soon as we have a way of leaving the loop
+    //fw.close();
 }

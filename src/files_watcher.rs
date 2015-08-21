@@ -79,6 +79,30 @@ impl FilesWatcher {
         Ok(event_paths)
     }
 
+    pub fn wait_and_execute(&mut self) -> io::Result<i32> {
+        let events = try!(self.inotify.wait_for_events());
+        let mut num_actions = 0;
+        
+        for event in events.iter() {
+            let path_actions = self.watches.get(&event.wd);
+            if path_actions.is_some() {
+                let event_path = EventPath::new(
+                    path_actions.unwrap().path.borrow(),
+                    event
+                );
+
+                for action in &path_actions.unwrap().actions {
+                    action.handle_change(&event_path);
+                    num_actions += 1;
+                }
+            } else {
+                println!("Error: no path for watch: {:?}", event.wd);
+            }
+        }
+
+        Ok(num_actions)
+    }
+
     pub fn close(&mut self) {
         self.inotify.close().ok().expect(
             "Fatal Error: Could not close inotify."
