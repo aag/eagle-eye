@@ -86,6 +86,7 @@ mod test {
     use std::path::Path;
     use std::path::PathBuf;
     use actions::Action;
+    use actions::print::PrintAction;
 
     #[test]
     fn watch_a_single_file() {
@@ -150,6 +151,78 @@ mod test {
 
         remove_temp_file(&filepath1);
         remove_temp_file(&filepath2);
+    }
+
+    #[test]
+    fn watch_file_and_execute_no_actions() {
+        let (path, mut file) = create_temp_file();
+        let filepath = path.clone();
+
+        let mut fw = FilesWatcher::new();
+        let actions: Vec<Box<Action + 'static>> = Vec::new();
+        fw.add_file(path, actions);
+
+        write_to(&mut file);
+
+        {
+            let actions_executed = fw.wait_and_execute().unwrap();
+            assert_eq!(0, actions_executed);
+        }
+
+        remove_temp_file(&filepath);
+    }
+
+    #[test]
+    fn watch_file_and_execute_one_print_action() {
+        let (path, mut file) = create_temp_file();
+        let filepath = path.clone();
+
+        let mut fw = FilesWatcher::new();
+
+        let print = PrintAction::new();
+        let actions: Vec<Box<Action + 'static>> = vec![Box::new(print)];
+        fw.add_file(path, actions);
+
+        write_to(&mut file);
+
+        {
+            let actions_executed = fw.wait_and_execute().unwrap();
+            assert_eq!(1, actions_executed);
+        }
+
+        remove_temp_file(&filepath); 
+    }
+
+    #[test]
+    fn watch_file_and_execute_five_print_actions() {
+        let (path, mut file) = create_temp_file();
+        let filepath = path.clone();
+
+        let mut fw = FilesWatcher::new();
+
+        let print1 = PrintAction::new();
+        let print2 = PrintAction::new();
+        let print3 = PrintAction::new();
+        let print4 = PrintAction::new();
+        let print5 = PrintAction::new();
+
+        let actions: Vec<Box<Action + 'static>> = vec![
+            Box::new(print1),
+            Box::new(print2),
+            Box::new(print3),
+            Box::new(print4),
+            Box::new(print5)
+        ];
+        fw.add_file(path, actions);
+
+        write_to(&mut file);
+
+        {
+            let actions_executed = fw.wait_and_execute().unwrap();
+            assert_eq!(5, actions_executed);
+        }
+
+        remove_temp_file(&filepath); 
     }
 
     fn create_temp_file() -> (PathBuf, File) {
