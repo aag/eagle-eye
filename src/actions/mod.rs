@@ -1,7 +1,7 @@
 pub mod print;
 
-use files_watcher::EventPath;
+use notify::Event;
 
 pub trait Action {
-    fn handle_change(&self, event_path: &EventPath);
+    fn handle_change(&self, event: &Event);
 }

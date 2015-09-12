@@ -1,4 +1,4 @@
-extern crate inotify;
+extern crate notify;
 
 use actions::Action;
 use actions::print::PrintAction;

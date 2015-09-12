@@ -1,5 +1,5 @@
 use actions::Action;
-use files_watcher::EventPath;
+use notify::Event;
 
 pub struct PrintAction;
 
@@ -10,7 +10,10 @@ impl PrintAction {
 }
 
 impl Action for PrintAction {
-    fn handle_change(&self, event_path: &EventPath) {
-        println!("{} changed", event_path.path.to_str().unwrap());
+    fn handle_change(&self, event: &Event) {
+        match event.path {
+            None => println!("No path for event"),
+            Some(ref path) => println!("{} changed", path.to_str().unwrap())
+        }
     }
 }
