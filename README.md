@@ -8,7 +8,7 @@ cross-platform. It works under Linux, Mac OS X, and MS Windows.
 
 After cloning the repository and building the software with `cargo build`, you
 can run the `eagle` binary to watch a file or directory. For example, this
-command will print out the date every time testfile.txt changes:
+command will print out the date and time every time testfile.txt changes:
 
 ```
 $ ./eagle --command "date" /tmp/testfile.txt
