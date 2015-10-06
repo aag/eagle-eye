@@ -34,7 +34,7 @@ impl Action for CommandAction {
             return;
         }
         
-        let output = command_result.expect("Error: could not get output");
+        let output = command_result.unwrap();
         println!("{}", String::from_utf8_lossy(&output.stdout));
 
         if !output.stderr.is_empty() {
