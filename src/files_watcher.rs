@@ -249,10 +249,14 @@ mod test {
 
     fn write_to(file: &mut File) {
         file
-            .write(b"This should trigger an inotify event.")
+            .write_all(b"This should trigger an inotify event.")
             .unwrap_or_else(|error|
                 panic!("Failed to write to file: {}", error)
             );
+
+        file
+            .flush()
+            .unwrap();
     }
 
 }
