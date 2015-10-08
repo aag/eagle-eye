@@ -18,7 +18,7 @@ const USAGE: &'static str = "
 Eagle Eye.
 
 Usage:
-  eagle [--command=<cmd>] <path>
+  eagle [--quiet] [--command=<cmd>] <path>
   eagle (-h | --help)
   eagle --version
 
@@ -26,6 +26,7 @@ Options:
   path                  Path to a file or directory to watch for changes.
   -c --command=<cmd>    A command to execute whenever a change happens.
   -h --help             Show this screen.
+  -q --quiet            Do not print file change information.
   --version             Show version.
 ";
 
@@ -34,7 +35,8 @@ struct Args {
     arg_path: String,
     flag_command: String,
     flag_help: bool,
-    flag_version: bool
+    flag_quiet: bool,
+    flag_version: bool,
 }
 
 #[cfg_attr(test, allow(dead_code))]
@@ -48,8 +50,12 @@ fn main() {
                             })
                             .unwrap_or_else(|e| e.exit());
 
-    let print = PrintAction::new();
-    let mut actions: Vec<Box<Action + 'static>> = vec![Box::new(print)];
+    let mut actions: Vec<Box<Action + 'static>> = vec![];
+
+    if !args.flag_quiet {
+        let print = PrintAction::new();
+        actions.push(Box::new(print));
+    }
 
     if !args.flag_command.is_empty() {
         let command = CommandAction::new(args.flag_command);
