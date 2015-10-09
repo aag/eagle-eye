@@ -13,23 +13,31 @@ impl CommandAction {
             command_line: command_line
         }
     }
-}
 
-impl Action for CommandAction {
-    fn handle_change(&self, event: &Event) {
+    pub fn get_command_line(&self, event: &Event) -> String {
         let path = match event.path {
             None => "",
             Some(ref path) => path.to_str().unwrap_or("")
         };
 
-        let cmd_line_with_path = self.command_line.replace("{:p}", path);
+        self.command_line.replace("{:p}", path)
+    }
 
-        let mut cmd_pieces = cmd_line_with_path.split(" ");
+    pub fn get_command(&self, event: &Event) -> Command {
+        let command_line = self.get_command_line(event);
+        let mut cmd_pieces = command_line.split(" ");
         let mut command = Command::new(cmd_pieces.next().unwrap());
         for piece in cmd_pieces {
             command.arg(piece);
         }
 
+        command
+    }
+}
+
+impl Action for CommandAction {
+    fn handle_change(&self, event: &Event) {
+        let mut command = self.get_command(event);
         let command_result = command
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
@@ -55,7 +63,5 @@ impl Action for CommandAction {
                 Ok(_) => {}
             }
         }
-
-
     }
 }
