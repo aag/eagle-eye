@@ -25,6 +25,9 @@ Usage:
 Options:
   path                  Path to a file or directory to watch for changes.
   -c --command=<cmd>    A command to execute whenever a change happens.
+                        If the command contains one or more instances of
+                        {:p}, they will be replaced by the path to the changed
+                        file or folder.
   -h --help             Show this screen.
   -q --quiet            Do not print file change information.
   --version             Show version.

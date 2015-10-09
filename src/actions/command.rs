@@ -16,8 +16,15 @@ impl CommandAction {
 }
 
 impl Action for CommandAction {
-    fn handle_change(&self, _event: &Event) {
-        let mut cmd_pieces = self.command_line.split(" ");
+    fn handle_change(&self, event: &Event) {
+        let path = match event.path {
+            None => "",
+            Some(ref path) => path.to_str().unwrap_or("")
+        };
+
+        let cmd_line_with_path = self.command_line.replace("{:p}", path);
+
+        let mut cmd_pieces = cmd_line_with_path.split(" ");
         let mut command = Command::new(cmd_pieces.next().unwrap());
         for piece in cmd_pieces {
             command.arg(piece);
