@@ -36,7 +36,7 @@ impl CommandAction {
 }
 
 impl Action for CommandAction {
-    fn handle_change(&self, event: &Event) {
+    fn handle_change(&self, event: &Event) -> Result<(), ()> {
         let mut command = self.get_command(event);
         let command_result = command
             .stdin(Stdio::inherit())
@@ -44,23 +44,27 @@ impl Action for CommandAction {
             .stderr(Stdio::inherit())
             .output();
 
-        if command_result.is_err() {
-            println!("Could not execute command: {:?}", self.command_line);
-            return;
-        }
-        
-        let output = command_result.unwrap();
-        println!("{}", String::from_utf8_lossy(&output.stdout));
+        match command_result {
+            Err(_) => {
+                println!("Could not execute command: {:?}", self.command_line);
+                Err(())
+            },
+            Ok(output) => {
+                println!("{}", String::from_utf8_lossy(&output.stdout));
 
-        if !output.stderr.is_empty() {
-            let write_result = writeln!(
-                &mut io::stderr(),
-                "{}",
-                String::from_utf8_lossy(&output.stderr)
-            );
-            match write_result {
-                Err(x) => println!("Error: Unable to write to stderr: {}", x),
-                Ok(_) => {}
+                if !output.stderr.is_empty() {
+                    let write_result = writeln!(
+                        &mut io::stderr(),
+                        "{}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                    match write_result {
+                        Err(x) => println!("Error: Unable to write to stderr: {}", x),
+                        Ok(_) => {}
+                    }
+                }
+
+                Ok(())
             }
         }
     }

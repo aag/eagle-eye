@@ -23,9 +23,12 @@ impl PrintAction {
 }
 
 impl Action for PrintAction {
-    fn handle_change(&self, event: &Event) {
+    fn handle_change(&self, event: &Event) -> Result<(), ()> {
         match event.path {
-            None => println!("No path for event"),
+            None => {
+                println!("No path for event");
+                Err(())
+            }
             Some(ref path) =>  {
                 let message = match event.op {
                     Ok(op) => self.flag_to_str(&op),
@@ -34,7 +37,9 @@ impl Action for PrintAction {
 
                 let path_str = path.to_str().unwrap_or("Unknown path");
 
-                println!("{} on path {:?}", message, path_str)
+                println!("{} on path {:?}", message, path_str);
+
+                Ok(())
             }
         }
     }

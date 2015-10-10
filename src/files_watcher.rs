@@ -56,8 +56,10 @@ impl FilesWatcher {
                         let actions = self.watches.get(path);
                         if actions.is_some() {
                             for action in actions.unwrap() {
-                                action.handle_change(&event);
-                                num_actions += 1;
+                                match action.handle_change(&event) {
+                                    Ok(_) => num_actions += 1,
+                                    Err(_) => {}
+                                }
                             }
                         } else {
                             println!("Error: no actions found for path: {:?}", path.display());
