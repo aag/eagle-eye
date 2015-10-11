@@ -4,13 +4,15 @@ use std::io::{self, Write};
 use std::process::{Command, Stdio};
 
 pub struct CommandAction {
-    command_line: String
+    command_line: String,
+    quiet: bool
 }
 
 impl CommandAction {
-    pub fn new(command_line: String) -> CommandAction {
+    pub fn new(command_line: String, quiet: bool) -> CommandAction {
         CommandAction {
-            command_line: command_line
+            command_line: command_line,
+            quiet: quiet
         }
     }
 
@@ -38,11 +40,15 @@ impl CommandAction {
 impl Action for CommandAction {
     fn handle_change(&self, event: &Event) -> Result<(), ()> {
         let mut command = self.get_command(event);
-        let command_result = command
-            .stdin(Stdio::inherit())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output();
+
+        if !self.quiet {
+            command
+                .stdin(Stdio::inherit())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit());
+        }
+
+        let command_result = command.output();
 
         match command_result {
             Err(_) => {
@@ -50,20 +56,22 @@ impl Action for CommandAction {
                 Err(())
             },
             Ok(output) => {
-                println!("{}", String::from_utf8_lossy(&output.stdout));
+                if !self.quiet {
+                    println!("{}", String::from_utf8_lossy(&output.stdout));
 
-                if !output.stderr.is_empty() {
-                    let write_result = writeln!(
-                        &mut io::stderr(),
-                        "{}",
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                    match write_result {
-                        Err(x) => println!("Error: Unable to write to stderr: {}", x),
-                        Ok(_) => {}
+                    if !output.stderr.is_empty() {
+                        let write_result = writeln!(
+                            &mut io::stderr(),
+                            "{}",
+                            String::from_utf8_lossy(&output.stderr)
+                        );
+                        match write_result {
+                            Err(x) => println!("Error: Unable to write to stderr: {}", x),
+                            Ok(_) => {}
+                        }
                     }
                 }
-
+                
                 Ok(())
             }
         }
@@ -83,8 +91,7 @@ mod test {
 
     #[test]
     fn constructor() {
-        // Make sure new() works with a single string argument
-        let _ = CommandAction::new("date".to_string());
+        let _ = CommandAction::new("date".to_string(), false);
     }
 
     #[test]
@@ -98,7 +105,7 @@ mod test {
         };
 
         // Assume the "date" command exists on all platforms
-        let command = CommandAction::new("date".to_string());
+        let command = CommandAction::new("date".to_string(), true);
         let result = command.handle_change(&event);
 
         // We can't capture the output, so just make sure the function
@@ -117,7 +124,10 @@ mod test {
         };
 
         // Assume this command does not exist
-        let command = CommandAction::new("command_does_not_exist".to_string());
+        let command = CommandAction::new(
+            "command_does_not_exist".to_string(),
+            true
+        );
         let result = command.handle_change(&event);
 
         assert!(result.is_err());

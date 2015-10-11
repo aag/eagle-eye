@@ -61,7 +61,7 @@ fn main() {
     }
 
     if !args.flag_command.is_empty() {
-        let command = CommandAction::new(args.flag_command);
+        let command = CommandAction::new(args.flag_command, args.flag_quiet);
         actions.push(Box::new(command));
     }
 
