@@ -44,3 +44,39 @@ impl Action for PrintAction {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    extern crate rand;
+
+    use super::*;
+
+    use actions::Action;
+    use notify::{Event, Op};
+    use std::path::PathBuf;
+
+
+    #[test]
+    fn constructor() {
+        // Make sure new() works with no arguments
+        let _ = PrintAction::new();
+    }
+
+    #[test]
+    fn handle_change() {
+        let o = Op::empty();
+        let path_buf = PathBuf::from("/");
+
+        let event = Event {
+            path: Some(path_buf),
+            op: Ok(o) 
+        };
+
+        let print = PrintAction::new();
+        let result = print.handle_change(&event);
+
+        // We can't capture the output, so just make sure the function
+        // returns Ok.
+        assert!(result.is_ok());
+    }
+}
