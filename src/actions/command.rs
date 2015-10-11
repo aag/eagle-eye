@@ -69,3 +69,60 @@ impl Action for CommandAction {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    extern crate rand;
+
+    use super::*;
+
+    use actions::Action;
+    use notify::{Event, Op};
+    use std::path::PathBuf;
+
+
+    #[test]
+    fn constructor() {
+        // Make sure new() works with a single string argument
+        let _ = CommandAction::new("date".to_string());
+    }
+
+    #[test]
+    fn handle_change_existing_command() {
+        let o = Op::empty();
+        let path_buf = PathBuf::from("/");
+
+        let event = Event {
+            path: Some(path_buf),
+            op: Ok(o) 
+        };
+
+        // Assume the "date" command exists on all platforms
+        let command = CommandAction::new("date".to_string());
+        let result = command.handle_change(&event);
+
+        // We can't capture the output, so just make sure the function
+        // returns Ok.
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn handle_change_missing_command() {
+        let o = Op::empty();
+        let path_buf = PathBuf::from("/");
+
+        let event = Event {
+            path: Some(path_buf),
+            op: Ok(o) 
+        };
+
+        // Assume this command does not exist
+        let command = CommandAction::new("command_does_not_exist".to_string());
+        let result = command.handle_change(&event);
+
+        assert!(result.is_err());
+    }
+
+
+
+}
