@@ -17,7 +17,7 @@ impl PrintAction {
             &op::REMOVE => "File or directory removed",
             &op::RENAME => "File or directory renamed",
             &op::WRITE => "File or diretory written to",
-            _ => "Unknown change"
+            _ => "Unknown change",
         }
     }
 }
@@ -29,10 +29,10 @@ impl Action for PrintAction {
                 println!("No path for event");
                 Err(())
             }
-            Some(ref path) =>  {
+            Some(ref path) => {
                 let message = match event.op {
                     Ok(op) => self.flag_to_str(&op),
-                    Err(_) => "Unknown change"
+                    Err(_) => "Unknown change",
                 };
 
                 let path_str = path.to_str().unwrap_or("Unknown path");
@@ -69,7 +69,7 @@ mod test {
 
         let event = Event {
             path: Some(path_buf),
-            op: Ok(o) 
+            op: Ok(o),
         };
 
         let print = PrintAction::new();

@@ -13,7 +13,7 @@ use actions::Action;
 pub struct FilesWatcher {
     watcher: Box<RecommendedWatcher>,
     rx: Receiver<Event>,
-    watches: HashMap<PathBuf, Vec<Box<Action>>>
+    watches: HashMap<PathBuf, Vec<Box<Action>>>,
 }
 
 impl FilesWatcher {
@@ -21,10 +21,10 @@ impl FilesWatcher {
         let (tx, rx) = channel();
         let watcher: Result<RecommendedWatcher, Error> = Watcher::new(tx);
 
-        FilesWatcher { 
+        FilesWatcher {
             watcher: Box::new(watcher.unwrap()),
             rx: rx,
-            watches: HashMap::new()
+            watches: HashMap::new(),
         }
     }
 
@@ -192,7 +192,7 @@ mod test {
             assert_eq!(1, actions_executed);
         }
 
-        remove_temp_file(&filepath); 
+        remove_temp_file(&filepath);
     }
 
     #[test]
@@ -208,13 +208,11 @@ mod test {
         let print4 = PrintAction::new();
         let print5 = PrintAction::new();
 
-        let actions: Vec<Box<Action + 'static>> = vec![
-            Box::new(print1),
-            Box::new(print2),
-            Box::new(print3),
-            Box::new(print4),
-            Box::new(print5)
-        ];
+        let actions: Vec<Box<Action + 'static>> = vec![Box::new(print1),
+                                                       Box::new(print2),
+                                                       Box::new(print3),
+                                                       Box::new(print4),
+                                                       Box::new(print5)];
         fw.add_file(path, actions);
 
         write_to(&mut file);
@@ -224,42 +222,36 @@ mod test {
             assert_eq!(5, actions_executed);
         }
 
-        remove_temp_file(&filepath); 
+        remove_temp_file(&filepath);
     }
 
     fn create_temp_file() -> (PathBuf, File) {
         let rand_part: String = thread_rng()
-            .gen_ascii_chars()
-            .take(8)
-            .collect();
+                                    .gen_ascii_chars()
+                                    .take(8)
+                                    .collect();
 
         let filename = "eagleeye-test-".to_string() + &rand_part;
         let path = temp_dir().join(filename);
-        let file = File::create(&path).unwrap_or_else(|error|
+        let file = File::create(&path).unwrap_or_else(|error| {
             panic!("Failed to create temporary file: {}", error)
-        );
+        });
         let path_buf = PathBuf::from(path);
 
         (path_buf, file)
     }
 
     fn remove_temp_file(path: &Path) {
-        remove_file(path).unwrap_or_else(|error|
-            panic!("Failed to create temporary file: {}", error)
-        );
+        remove_file(path)
+            .unwrap_or_else(|error| panic!("Failed to create temporary file: {}", error));
     }
 
     fn write_to(file: &mut File) {
-        file
-            .write_all(b"This should trigger an inotify event.")
-            .unwrap_or_else(|error|
-                panic!("Failed to write to file: {}", error)
-            );
+        file.write_all(b"This should trigger an inotify event.")
+            .unwrap_or_else(|error| panic!("Failed to write to file: {}", error));
 
-        file
-            .flush()
+        file.flush()
             .unwrap();
     }
 
 }
-

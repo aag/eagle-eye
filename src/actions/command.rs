@@ -5,21 +5,21 @@ use std::process::{Command, Stdio};
 
 pub struct CommandAction {
     command_line: String,
-    quiet: bool
+    quiet: bool,
 }
 
 impl CommandAction {
     pub fn new(command_line: String, quiet: bool) -> CommandAction {
         CommandAction {
             command_line: command_line,
-            quiet: quiet
+            quiet: quiet,
         }
     }
 
     pub fn get_command_line(&self, event: &Event) -> String {
         let path = match event.path {
             None => "",
-            Some(ref path) => path.to_str().unwrap_or("")
+            Some(ref path) => path.to_str().unwrap_or(""),
         };
 
         self.command_line.replace("{:p}", path)
@@ -42,10 +42,9 @@ impl Action for CommandAction {
         let mut command = self.get_command(event);
 
         if !self.quiet {
-            command
-                .stdin(Stdio::inherit())
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit());
+            command.stdin(Stdio::inherit())
+                   .stdout(Stdio::inherit())
+                   .stderr(Stdio::inherit());
         }
 
         let command_result = command.output();
@@ -54,24 +53,22 @@ impl Action for CommandAction {
             Err(_) => {
                 println!("Could not execute command: {:?}", self.command_line);
                 Err(())
-            },
+            }
             Ok(output) => {
                 if !self.quiet {
                     println!("{}", String::from_utf8_lossy(&output.stdout));
 
                     if !output.stderr.is_empty() {
-                        let write_result = writeln!(
-                            &mut io::stderr(),
-                            "{}",
-                            String::from_utf8_lossy(&output.stderr)
-                        );
+                        let write_result = writeln!(&mut io::stderr(),
+                                                    "{}",
+                                                    String::from_utf8_lossy(&output.stderr));
                         match write_result {
                             Err(x) => println!("Error: Unable to write to stderr: {}", x),
                             Ok(_) => {}
                         }
                     }
                 }
-                
+
                 Ok(())
             }
         }
@@ -101,7 +98,7 @@ mod test {
 
         let event = Event {
             path: Some(path_buf),
-            op: Ok(o) 
+            op: Ok(o),
         };
 
         // Assume the "date" command exists on all platforms
@@ -120,14 +117,11 @@ mod test {
 
         let event = Event {
             path: Some(path_buf),
-            op: Ok(o) 
+            op: Ok(o),
         };
 
         // Assume this command does not exist
-        let command = CommandAction::new(
-            "command_does_not_exist".to_string(),
-            true
-        );
+        let command = CommandAction::new("command_does_not_exist".to_string(), true);
         let result = command.handle_change(&event);
 
         assert!(result.is_err());

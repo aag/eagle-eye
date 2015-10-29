@@ -14,6 +14,7 @@ pub mod actions;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 const USAGE: &'static str = "
 Eagle Eye.
 
@@ -46,12 +47,12 @@ struct Args {
 fn main() {
     let version_option = Some(VERSION.to_string());
     let args: Args = Docopt::new(USAGE)
-                            .and_then(|d| {
-                                d.help(true)
-                                 .version(version_option)
-                                 .decode()
-                            })
-                            .unwrap_or_else(|e| e.exit());
+                         .and_then(|d| {
+                             d.help(true)
+                              .version(version_option)
+                              .decode()
+                         })
+                         .unwrap_or_else(|e| e.exit());
 
     let mut actions: Vec<Box<Action + 'static>> = vec![];
 
@@ -75,10 +76,10 @@ fn main() {
 
         match result {
             Ok(i) => println!("Executed {} action(s) successfully.", i),
-            Err(_) => println!("Error executing some actions.")
+            Err(_) => println!("Error executing some actions."),
         }
     }
 
     // Uncomment this as soon as we have a way of leaving the loop
-    //fw.close();
+    // fw.close();
 }
