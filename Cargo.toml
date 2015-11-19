@@ -6,7 +6,7 @@ license = "MIT"
 
 [dependencies]
 docopt = "^0.6.73"
-notify = "^2.4.0"
+notify = "^2.4.1"
 libc = "^0.1.10"
 rand = "^0.3.11"
 rustc-serialize = "^0.3.16"
