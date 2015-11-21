@@ -19,13 +19,13 @@ const USAGE: &'static str = "
 Eagle Eye.
 
 Usage:
-  eagle [--quiet] [--command=<cmd>] <path>
+  eagle [--quiet] [--execute=<cmd>] <path>
   eagle (-h | --help)
   eagle --version
 
 Options:
   path                  Path to a file or directory to watch for changes.
-  -c --command=<cmd>    A command to execute whenever a change happens.
+  -e --execute=<cmd>    A command to execute whenever a change happens.
                         If the command contains one or more instances of
                         {:p}, they will be replaced by the path to the changed
                         file or folder.
@@ -37,7 +37,7 @@ Options:
 #[derive(Debug, RustcDecodable)]
 struct Args {
     arg_path: String,
-    flag_command: String,
+    flag_execute: String,
     flag_help: bool,
     flag_quiet: bool,
     flag_version: bool,
@@ -61,8 +61,8 @@ fn main() {
         actions.push(Box::new(print));
     }
 
-    if !args.flag_command.is_empty() {
-        let command = CommandAction::new(args.flag_command, args.flag_quiet);
+    if !args.flag_execute.is_empty() {
+        let command = CommandAction::new(args.flag_execute, args.flag_quiet);
         actions.push(Box::new(command));
     }
 
