@@ -1,4 +1,4 @@
-### Eagle Eye [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+### Eagle Eye [![Build Status](https://travis-ci.org/aag/eagle-eye.svg?branch=master)](https://travis-ci.org/aag/eagle-eye) [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Eagle Eye is a file watcher that waits for changes to files or directories,
 then executes actions when they change. It is written in Rust and is
