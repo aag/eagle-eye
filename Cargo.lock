@@ -7,7 +7,7 @@ dependencies = [
  "notify 2.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
- "toml 0.1.26 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -21,7 +21,7 @@ dependencies = [
 
 [[package]]
 name = "aho-corasick"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "memchr 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -211,7 +211,7 @@ name = "regex"
 version = "0.1.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "aho-corasick 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "aho-corasick 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "memchr 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex-syntax 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -248,7 +248,7 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.1.26"
+version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
