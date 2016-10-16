@@ -28,6 +28,7 @@ impl FilesWatcher {
         }
     }
 
+    // TODO: accept a Vec of paths
     pub fn add_file(&mut self, path: PathBuf, actions: Vec<Box<Action>>) {
         let result = self.watcher.watch(&path);
 
