@@ -1,0 +1,9 @@
+[settings]
+quiet = false
+
+[[watchers]]
+action_type = "command"
+execute = "ls -hl {:p}"
+path = "/tmp/test.txt"
+
+
