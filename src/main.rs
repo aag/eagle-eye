@@ -3,19 +3,19 @@ extern crate notify;
 extern crate rustc_serialize;
 extern crate toml;
 
-use std::fs::File;
-use std::io::Read;
+pub mod config;
+pub mod files_watcher;
+pub mod actions;
+
 use std::path::PathBuf;
 use std::process;
 
 use actions::Action;
 use actions::print::PrintAction;
 use actions::command::CommandAction;
+use config::SettingsConfig;
 use docopt::Docopt;
 use files_watcher::FilesWatcher;
-
-pub mod files_watcher;
-pub mod actions;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -53,24 +53,6 @@ struct Args {
     flag_version: bool,
 }
 
-#[derive(Debug, RustcDecodable)]
-struct Config {
-    settings: Option<SettingsConfig>,
-    watchers: Option<Vec<WatcherSettings>>,
-}
-
-#[derive(Debug, RustcDecodable)]
-struct SettingsConfig {
-    quiet: Option<bool>,
-}
-
-#[derive(Debug, RustcDecodable)]
-struct WatcherSettings {
-    action_type: String,
-    execute: String,
-    path: String,
-}
-
 #[cfg_attr(test, allow(dead_code))]
 fn main() {
     let version_option = Some(VERSION.to_string());
@@ -86,13 +68,7 @@ fn main() {
     let mut fw = FilesWatcher::new();
 
     if !args.flag_config.is_empty() {
-        let mut config_content = String::new();
-        File::open(&args.flag_config).and_then(|mut f| {
-            f.read_to_string(&mut config_content)
-        }).unwrap();
-
-        let config: Config = toml::decode_str(&config_content).unwrap();
-        //println!("{:#?}", config);
+        let config = config::parse_file(&args.flag_config);
 
         let settings = match config.settings {
             Some(settings) => settings,
