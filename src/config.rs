@@ -3,6 +3,7 @@ extern crate toml;
 
 use std::fs::File;
 use std::io::Read;
+use std::path::Path;
 
 #[derive(Debug, RustcDecodable)]
 pub struct Config {
@@ -22,14 +23,20 @@ pub struct WatcherSettings {
     pub path: String,
 }
 
-pub fn parse(config_content: String) -> Config {
+pub fn parse(config_content: String) -> Option<Config> {
     let config: Config = toml::decode_str(&config_content).unwrap();
     //println!("{:#?}", config);
 
-    config
+    Some(config)
 }
 
-pub fn parse_file(path: &str) -> Config {
+pub fn parse_file(path: &str) -> Option<Config> {
+    let file_path = Path::new(path);
+    if !file_path.exists() {
+        println!("ERROR: Config file not found: {}", path);
+        return None;
+    }
+
     let mut config_content = String::new();
     File::open(&path).and_then(|mut f| {
         f.read_to_string(&mut config_content)
