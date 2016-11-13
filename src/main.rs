@@ -70,7 +70,10 @@ fn main() {
     if !args.flag_config.is_empty() {
         let config = match config::parse_file(&args.flag_config) {
             Some(config) => config,
-            None => process::exit(1),
+            None => {
+                println!("Error parsing config file. Exiting.");
+                process::exit(1);
+            }
         };
 
         let settings = match config.settings {

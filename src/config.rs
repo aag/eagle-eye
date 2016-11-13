@@ -24,10 +24,7 @@ pub struct WatcherSettings {
 }
 
 pub fn parse(config_content: String) -> Option<Config> {
-    let config: Config = toml::decode_str(&config_content).unwrap();
-    //println!("{:#?}", config);
-
-    Some(config)
+    toml::decode_str(&config_content)
 }
 
 pub fn parse_file(path: &str) -> Option<Config> {
