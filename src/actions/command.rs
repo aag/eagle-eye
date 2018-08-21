@@ -43,8 +43,8 @@ impl Action for CommandAction {
 
         if !self.quiet {
             command.stdin(Stdio::inherit())
-                   .stdout(Stdio::inherit())
-                   .stderr(Stdio::inherit());
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit());
         }
 
         let command_result = command.output();

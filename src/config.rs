@@ -35,10 +35,9 @@ pub fn parse_file(path: &str) -> Option<Config> {
     }
 
     let mut config_content = String::new();
-    File::open(&path).and_then(|mut f| {
-        f.read_to_string(&mut config_content)
-    }).unwrap();
+    File::open(&path)
+        .and_then(|mut f| f.read_to_string(&mut config_content))
+        .unwrap();
 
     parse(config_content)
 }
-

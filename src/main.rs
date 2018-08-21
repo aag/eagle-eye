@@ -57,12 +57,12 @@ struct Args {
 fn main() {
     let version_option = Some(VERSION.to_string());
     let args: Args = Docopt::new(USAGE)
-                         .and_then(|d| {
-                             d.help(true)
-                              .version(version_option)
-                              .decode()
-                         })
-                         .unwrap_or_else(|e| e.exit());
+        .and_then(|d| {
+            d.help(true)
+                .version(version_option)
+                .decode()
+        })
+        .unwrap_or_else(|e| e.exit());
 
     let mut actions: Vec<Box<Action + 'static>> = vec![];
     let mut fw = FilesWatcher::new();
@@ -103,7 +103,7 @@ fn main() {
                     let execute_string = watcher.execute.to_owned();
                     let command = CommandAction::new(execute_string, quiet_flag);
                     actions.push(Box::new(command));
-                },
+                }
                 _ => (),
             }
 
@@ -124,7 +124,7 @@ fn main() {
         let path_buf = PathBuf::from(args.flag_path);
         fw.add_file(path_buf, actions);
     }
-    
+
     loop {
         let result = fw.wait_and_execute();
 

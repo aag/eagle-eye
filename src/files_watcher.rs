@@ -228,15 +228,14 @@ mod test {
 
     fn create_temp_file() -> (PathBuf, File) {
         let rand_part: String = thread_rng()
-                                    .gen_ascii_chars()
-                                    .take(8)
-                                    .collect();
+            .gen_ascii_chars()
+            .take(8)
+            .collect();
 
         let filename = "eagleeye-test-".to_string() + &rand_part;
         let path = temp_dir().join(filename);
-        let file = File::create(&path).unwrap_or_else(|error| {
-            panic!("Failed to create temporary file: {}", error)
-        });
+        let file = File::create(&path)
+            .unwrap_or_else(|error| panic!("Failed to create temporary file: {}", error));
         let path_buf = PathBuf::from(path);
 
         (path_buf, file)
