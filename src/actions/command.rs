@@ -42,7 +42,8 @@ impl Action for CommandAction {
         let mut command = self.get_command(event);
 
         if !self.quiet {
-            command.stdin(Stdio::inherit())
+            command
+                .stdin(Stdio::inherit())
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit());
         }
@@ -59,9 +60,11 @@ impl Action for CommandAction {
                     println!("{}", String::from_utf8_lossy(&output.stdout));
 
                     if !output.stderr.is_empty() {
-                        let write_result = writeln!(&mut io::stderr(),
-                                                    "{}",
-                                                    String::from_utf8_lossy(&output.stderr));
+                        let write_result = writeln!(
+                            &mut io::stderr(),
+                            "{}",
+                            String::from_utf8_lossy(&output.stderr)
+                        );
                         match write_result {
                             Err(x) => println!("Error: Unable to write to stderr: {}", x),
                             Ok(_) => {}
@@ -84,7 +87,6 @@ mod test {
     use actions::Action;
     use notify::{Event, Op};
     use std::path::PathBuf;
-
 
     #[test]
     fn constructor() {
@@ -126,7 +128,5 @@ mod test {
 
         assert!(result.is_err());
     }
-
-
 
 }

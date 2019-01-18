@@ -1,7 +1,7 @@
 use actions::Action;
-use notify::Event;
 use notify::op;
 use notify::op::Op;
+use notify::Event;
 
 pub struct PrintAction;
 
@@ -54,7 +54,6 @@ mod test {
     use actions::Action;
     use notify::{Event, Op};
     use std::path::PathBuf;
-
 
     #[test]
     fn constructor() {

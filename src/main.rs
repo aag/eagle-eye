@@ -3,16 +3,16 @@ extern crate notify;
 extern crate rustc_serialize;
 extern crate toml;
 
+pub mod actions;
 pub mod config;
 pub mod files_watcher;
-pub mod actions;
 
 use std::path::PathBuf;
 use std::process;
 
-use actions::Action;
-use actions::print::PrintAction;
 use actions::command::CommandAction;
+use actions::print::PrintAction;
+use actions::Action;
 use config::SettingsConfig;
 use docopt::Docopt;
 use files_watcher::FilesWatcher;
@@ -57,11 +57,7 @@ struct Args {
 fn main() {
     let version_option = Some(VERSION.to_string());
     let args: Args = Docopt::new(USAGE)
-        .and_then(|d| {
-            d.help(true)
-                .version(version_option)
-                .decode()
-        })
+        .and_then(|d| d.help(true).version(version_option).decode())
         .unwrap_or_else(|e| e.exit());
 
     let mut actions: Vec<Box<Action + 'static>> = vec![];

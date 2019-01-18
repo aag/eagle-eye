@@ -1,7 +1,7 @@
 extern crate libc;
 extern crate notify;
 
-use notify::{RecommendedWatcher, Error, Watcher, Event};
+use notify::{Error, Event, RecommendedWatcher, Watcher};
 use std::sync::mpsc::{channel, Receiver, RecvError};
 
 use std::collections::HashMap;
@@ -49,7 +49,10 @@ impl FilesWatcher {
         let event_result = self.rx.recv();
 
         match event_result {
-            Err(_) => Err(io::Error::new(io::ErrorKind::Other, "Error receiving event")),
+            Err(_) => Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Error receiving event",
+            )),
             Ok(event) => {
                 match event.path {
                     None => println!("Warning: event has no path"),
@@ -74,7 +77,6 @@ impl FilesWatcher {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     extern crate rand;
@@ -82,14 +84,14 @@ mod test {
     use super::*;
 
     use self::rand::{thread_rng, Rng};
+    use actions::print::PrintAction;
+    use actions::Action;
     use std::env::temp_dir;
-    use std::fs::File;
     use std::fs::remove_file;
+    use std::fs::File;
     use std::io::Write;
     use std::path::Path;
     use std::path::PathBuf;
-    use actions::Action;
-    use actions::print::PrintAction;
 
     #[test]
     fn watch_a_single_file() {
@@ -114,7 +116,6 @@ mod test {
 
         remove_temp_file(&filepath);
     }
-
 
     #[test]
     fn watch_two_files() {
@@ -150,7 +151,6 @@ mod test {
                 }
             }
         }
-
 
         remove_temp_file(&filepath1);
         remove_temp_file(&filepath2);
@@ -209,11 +209,13 @@ mod test {
         let print4 = PrintAction::new();
         let print5 = PrintAction::new();
 
-        let actions: Vec<Box<Action + 'static>> = vec![Box::new(print1),
-                                                       Box::new(print2),
-                                                       Box::new(print3),
-                                                       Box::new(print4),
-                                                       Box::new(print5)];
+        let actions: Vec<Box<Action + 'static>> = vec![
+            Box::new(print1),
+            Box::new(print2),
+            Box::new(print3),
+            Box::new(print4),
+            Box::new(print5),
+        ];
         fw.add_file(path, actions);
 
         write_to(&mut file);
@@ -227,10 +229,7 @@ mod test {
     }
 
     fn create_temp_file() -> (PathBuf, File) {
-        let rand_part: String = thread_rng()
-            .gen_ascii_chars()
-            .take(8)
-            .collect();
+        let rand_part: String = thread_rng().gen_ascii_chars().take(8).collect();
 
         let filename = "eagleeye-test-".to_string() + &rand_part;
         let path = temp_dir().join(filename);
@@ -250,8 +249,7 @@ mod test {
         file.write_all(b"This should trigger an inotify event.")
             .unwrap_or_else(|error| panic!("Failed to write to file: {}", error));
 
-        file.flush()
-            .unwrap();
+        file.flush().unwrap();
     }
 
 }

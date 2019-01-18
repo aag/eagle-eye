@@ -1,5 +1,5 @@
-pub mod print;
 pub mod command;
+pub mod print;
 
 use notify::Event;
 
