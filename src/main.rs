@@ -1,6 +1,7 @@
 extern crate docopt;
 extern crate notify;
-extern crate rustc_serialize;
+#[macro_use]
+extern crate serde_derive;
 extern crate toml;
 
 pub mod actions;
@@ -43,7 +44,7 @@ Options:
   --version               Show version.
 ";
 
-#[derive(Debug, RustcDecodable)]
+#[derive(Debug, Deserialize)]
 struct Args {
     flag_path: String,
     flag_config: String,
@@ -57,7 +58,7 @@ struct Args {
 fn main() {
     let version_option = Some(VERSION.to_string());
     let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.help(true).version(version_option).decode())
+        .and_then(|d| d.help(true).version(version_option).deserialize())
         .unwrap_or_else(|e| e.exit());
 
     let mut actions: Vec<Box<Action + 'static>> = vec![];

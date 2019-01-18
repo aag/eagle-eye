@@ -1,22 +1,21 @@
-extern crate rustc_serialize;
 extern crate toml;
 
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-#[derive(Debug, RustcDecodable)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
     pub settings: Option<SettingsConfig>,
     pub watchers: Option<Vec<WatcherSettings>>,
 }
 
-#[derive(Debug, RustcDecodable)]
+#[derive(Debug, Deserialize)]
 pub struct SettingsConfig {
     pub quiet: Option<bool>,
 }
 
-#[derive(Debug, RustcDecodable)]
+#[derive(Debug, Deserialize)]
 pub struct WatcherSettings {
     pub action_type: String,
     pub execute: String,
@@ -24,7 +23,10 @@ pub struct WatcherSettings {
 }
 
 pub fn parse(config_content: String) -> Option<Config> {
-    toml::decode_str(&config_content)
+    match toml::from_str(&config_content) {
+        Ok(config) => Some(config),
+        Err(_) => None,
+    }
 }
 
 pub fn parse_file(path: &str) -> Option<Config> {
