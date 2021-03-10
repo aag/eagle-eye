@@ -5,11 +5,11 @@ authors = ["Adam Goforth <code@adamgoforth.com>"]
 license = "MIT"
 
 [dependencies]
-docopt = "1.0"
+docopt = "^1.1.0"
 notify = "^2.4.1"
-libc = "^0.2.8"
-rand = "^0.3.11"
-serde = "1.0"
-serde_derive = "1.0"
-toml = "0.4"
+libc = "^0.2.88"
+rand = "^0.8.3"
+serde = "^1.0.124"
+serde_derive = "^1.0.124"
+toml = "^0.5.8"
 

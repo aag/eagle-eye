@@ -83,6 +83,7 @@ mod test {
 
     use super::*;
 
+    use self::rand::distributions::Alphanumeric;
     use self::rand::{thread_rng, Rng};
     use actions::print::PrintAction;
     use actions::Action;
@@ -229,7 +230,11 @@ mod test {
     }
 
     fn create_temp_file() -> (PathBuf, File) {
-        let rand_part: String = thread_rng().gen_ascii_chars().take(8).collect();
+        let rand_part: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(8)
+            .map(char::from)
+            .collect();
 
         let filename = "eagleeye-test-".to_string() + &rand_part;
         let path = temp_dir().join(filename);
