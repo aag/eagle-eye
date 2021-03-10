@@ -61,7 +61,7 @@ fn main() {
         .and_then(|d| d.help(true).version(version_option).deserialize())
         .unwrap_or_else(|e| e.exit());
 
-    let mut actions: Vec<Box<Action + 'static>> = vec![];
+    let mut actions: Vec<Box<dyn Action + 'static>> = vec![];
     let mut fw = FilesWatcher::new();
 
     if !args.flag_config.is_empty() {

@@ -13,7 +13,7 @@ use actions::Action;
 pub struct FilesWatcher {
     watcher: Box<RecommendedWatcher>,
     rx: Receiver<Event>,
-    watches: HashMap<PathBuf, Vec<Box<Action>>>,
+    watches: HashMap<PathBuf, Vec<Box<dyn Action>>>,
 }
 
 impl FilesWatcher {
@@ -29,7 +29,7 @@ impl FilesWatcher {
     }
 
     // TODO: accept a Vec of paths
-    pub fn add_file(&mut self, path: PathBuf, actions: Vec<Box<Action>>) {
+    pub fn add_file(&mut self, path: PathBuf, actions: Vec<Box<dyn Action>>) {
         let result = self.watcher.watch(&path);
 
         if result.is_ok() {
@@ -99,7 +99,7 @@ mod test {
         let filepath = path.clone();
 
         let mut fw = FilesWatcher::new();
-        let actions: Vec<Box<Action + 'static>> = Vec::new();
+        let actions: Vec<Box<dyn Action + 'static>> = Vec::new();
         fw.add_file(path, actions);
 
         write_to(&mut file);
@@ -124,8 +124,8 @@ mod test {
 
         let filepath1 = path1.clone();
         let filepath2 = path2.clone();
-        let actions1: Vec<Box<Action + 'static>> = Vec::new();
-        let actions2: Vec<Box<Action + 'static>> = Vec::new();
+        let actions1: Vec<Box<dyn Action + 'static>> = Vec::new();
+        let actions2: Vec<Box<dyn Action + 'static>> = Vec::new();
 
         let mut fw = FilesWatcher::new();
         fw.add_file(path1, actions1);
@@ -162,7 +162,7 @@ mod test {
         let filepath = path.clone();
 
         let mut fw = FilesWatcher::new();
-        let actions: Vec<Box<Action + 'static>> = Vec::new();
+        let actions: Vec<Box<dyn Action + 'static>> = Vec::new();
         fw.add_file(path, actions);
 
         write_to(&mut file);
@@ -183,7 +183,7 @@ mod test {
         let mut fw = FilesWatcher::new();
 
         let print = PrintAction::new();
-        let actions: Vec<Box<Action + 'static>> = vec![Box::new(print)];
+        let actions: Vec<Box<dyn Action + 'static>> = vec![Box::new(print)];
         fw.add_file(path, actions);
 
         write_to(&mut file);
@@ -209,7 +209,7 @@ mod test {
         let print4 = PrintAction::new();
         let print5 = PrintAction::new();
 
-        let actions: Vec<Box<Action + 'static>> = vec![
+        let actions: Vec<Box<dyn Action + 'static>> = vec![
             Box::new(print1),
             Box::new(print2),
             Box::new(print3),
@@ -251,5 +251,4 @@ mod test {
 
         file.flush().unwrap();
     }
-
 }
