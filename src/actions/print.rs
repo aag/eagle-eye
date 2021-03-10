@@ -11,23 +11,29 @@ impl PrintAction {
     }
 
     pub fn flag_to_str(&self, flag: &Op) -> &'static str {
-        match flag {
-            &op::CHMOD => "Permissions or timestamps changed",
-            &op::CREATE => "File or directory created",
-            &op::REMOVE => "File or directory removed",
-            &op::RENAME => "File or directory renamed",
-            &op::WRITE => "File or diretory written to",
+        match *flag {
+            op::CHMOD => "Permissions or timestamps changed",
+            op::CREATE => "File or directory created",
+            op::REMOVE => "File or directory removed",
+            op::RENAME => "File or directory renamed",
+            op::WRITE => "File or diretory written to",
             _ => "Unknown change",
         }
     }
 }
 
+impl Default for PrintAction {
+    fn default() -> Self {
+        PrintAction::new()
+    }
+}
+
 impl Action for PrintAction {
-    fn handle_change(&self, event: &Event) -> Result<(), ()> {
+    fn handle_change(&self, event: &Event) -> Result<(), &'static str> {
         match event.path {
             None => {
                 println!("No path for event");
-                Err(())
+                Err("No path for event")
             }
             Some(ref path) => {
                 let message = match event.op {

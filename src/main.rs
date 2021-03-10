@@ -18,10 +18,10 @@ use config::SettingsConfig;
 use docopt::Docopt;
 use files_watcher::FilesWatcher;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
-const USAGE: &'static str = "
+#[rustfmt::skip]
+const USAGE: &str = "
 Eagle Eye.
 
 Usage:
@@ -78,10 +78,7 @@ fn main() {
             None => SettingsConfig { quiet: Some(false) },
         };
 
-        let quiet_flag = match settings.quiet {
-            Some(quiet_flag) => quiet_flag,
-            None => false,
-        };
+        let quiet_flag = settings.quiet.unwrap_or(false);
 
         let watchers = match config.watchers {
             Some(watchers) => watchers,
@@ -92,16 +89,13 @@ fn main() {
         };
 
         // TODO: convert to for loop to handle multiple watchers
-        if watchers.len() > 0 {
-            let ref watcher = watchers[0];
+        if !watchers.is_empty() {
+            let watcher = &watchers[0];
 
-            match watcher.action_type.as_ref() {
-                "command" => {
-                    let execute_string = watcher.execute.to_owned();
-                    let command = CommandAction::new(execute_string, quiet_flag);
-                    actions.push(Box::new(command));
-                }
-                _ => (),
+            if let "command" = watcher.action_type.as_ref() {
+                let execute_string = watcher.execute.to_owned();
+                let command = CommandAction::new(execute_string, quiet_flag);
+                actions.push(Box::new(command));
             }
 
             let path_buf = PathBuf::from(watcher.path.to_owned());

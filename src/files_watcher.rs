@@ -16,6 +16,12 @@ pub struct FilesWatcher {
     watches: HashMap<PathBuf, Vec<Box<dyn Action>>>,
 }
 
+impl Default for FilesWatcher {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FilesWatcher {
     pub fn new() -> FilesWatcher {
         let (tx, rx) = channel();
@@ -60,9 +66,8 @@ impl FilesWatcher {
                         let actions = self.watches.get(path);
                         if actions.is_some() {
                             for action in actions.unwrap() {
-                                match action.handle_change(&event) {
-                                    Ok(_) => num_actions += 1,
-                                    Err(_) => {}
+                                if action.handle_change(&event).is_ok() {
+                                    num_actions += 1;
                                 }
                             }
                         } else {
@@ -108,7 +113,7 @@ mod test {
         {
             let event = fw.wait_for_events().unwrap();
             match event.path {
-                None => assert!(false, "Error: event has no path"),
+                None => panic!("Error: event has no path"),
                 Some(event_path) => {
                     assert_eq!(filepath, event_path);
                 }
@@ -138,7 +143,7 @@ mod test {
         {
             let event = fw.wait_for_events().unwrap();
             match event.path {
-                None => assert!(false, "Error: event has no path"),
+                None => panic!("Error: event has no path"),
                 Some(event_path) => {
                     assert_eq!(filepath1, event_path);
                 }
@@ -146,7 +151,7 @@ mod test {
 
             let event = fw.wait_for_events().unwrap();
             match event.path {
-                None => assert!(false, "Error: event has no path"),
+                None => panic!("Error: event has no path"),
                 Some(event_path) => {
                     assert_eq!(filepath2, event_path);
                 }
@@ -240,9 +245,8 @@ mod test {
         let path = temp_dir().join(filename);
         let file = File::create(&path)
             .unwrap_or_else(|error| panic!("Failed to create temporary file: {}", error));
-        let path_buf = PathBuf::from(path);
 
-        (path_buf, file)
+        (path, file)
     }
 
     fn remove_temp_file(path: &Path) {

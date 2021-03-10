@@ -11,8 +11,8 @@ pub struct CommandAction {
 impl CommandAction {
     pub fn new(command_line: String, quiet: bool) -> CommandAction {
         CommandAction {
-            command_line: command_line,
-            quiet: quiet,
+            command_line,
+            quiet,
         }
     }
 
@@ -27,7 +27,7 @@ impl CommandAction {
 
     pub fn get_command(&self, event: &Event) -> Command {
         let command_line = self.get_command_line(event);
-        let mut cmd_pieces = command_line.split(" ");
+        let mut cmd_pieces = command_line.split(' ');
         let mut command = Command::new(cmd_pieces.next().unwrap());
         for piece in cmd_pieces {
             command.arg(piece);
@@ -38,7 +38,7 @@ impl CommandAction {
 }
 
 impl Action for CommandAction {
-    fn handle_change(&self, event: &Event) -> Result<(), ()> {
+    fn handle_change(&self, event: &Event) -> Result<(), &'static str> {
         let mut command = self.get_command(event);
 
         if !self.quiet {
@@ -53,7 +53,7 @@ impl Action for CommandAction {
         match command_result {
             Err(_) => {
                 println!("Could not execute command: {:?}", self.command_line);
-                Err(())
+                Err("Could not execute command")
             }
             Ok(output) => {
                 if !self.quiet {
@@ -65,9 +65,8 @@ impl Action for CommandAction {
                             "{}",
                             String::from_utf8_lossy(&output.stderr)
                         );
-                        match write_result {
-                            Err(x) => println!("Error: Unable to write to stderr: {}", x),
-                            Ok(_) => {}
+                        if let Err(x) = write_result {
+                            println!("Error: Unable to write to stderr: {}", x);
                         }
                     }
                 }
