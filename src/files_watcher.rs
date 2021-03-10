@@ -23,7 +23,7 @@ impl FilesWatcher {
 
         FilesWatcher {
             watcher: Box::new(watcher.unwrap()),
-            rx: rx,
+            rx,
             watches: HashMap::new(),
         }
     }
