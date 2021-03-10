@@ -24,6 +24,17 @@ $ ./eagle --execute "ls -l {:p}" --path=/tmp/file.txt
 
 You can get more information on usage by running `eagle -h`.
 
+## Development
+
+All of the lints and tests that are run during CI can be run locally with these commands:
+
+```
+$ cargo fmt --all
+$ cargo check
+$ cargo clippy --all-targets --all-features -- -D warnings
+$ cargo test
+```
+
 ## License
 
 Eagle Eye is licensed under the
