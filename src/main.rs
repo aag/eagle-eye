@@ -14,9 +14,9 @@ use std::process;
 use crate::actions::command::CommandAction;
 use crate::actions::print::PrintAction;
 use crate::actions::Action;
-use clap::Parser;
 use crate::config::SettingsConfig;
 use crate::files_watcher::FilesWatcher;
+use clap::Parser;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
