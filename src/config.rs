@@ -29,15 +29,14 @@ pub fn parse(config_content: String) -> Option<Config> {
     }
 }
 
-pub fn parse_file(path: &str) -> Option<Config> {
-    let file_path = Path::new(path);
-    if !file_path.exists() {
-        println!("ERROR: Config file not found: {}", path);
+pub fn parse_file(path: &Path) -> Option<Config> {
+    if !path.exists() {
+        println!("ERROR: Config file not found: {}", path.display());
         return None;
     }
 
     let mut config_content = String::new();
-    File::open(&path)
+    File::open(path)
         .and_then(|mut f| f.read_to_string(&mut config_content))
         .unwrap();
 

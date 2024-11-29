@@ -5,11 +5,11 @@ authors = ["Adam Goforth <code@adamgoforth.com>"]
 license = "MIT"
 
 [dependencies]
-docopt = "^1.1.0"
 notify = "^2.4.1"
 libc = "^0.2.88"
 rand = "^0.8.3"
 serde = "^1.0.124"
 serde_derive = "^1.0.124"
 toml = "^0.5.8"
+clap = { version = "4.5.21", features = ["derive"] }
 

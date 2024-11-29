@@ -1,4 +1,4 @@
-extern crate docopt;
+extern crate clap;
 extern crate notify;
 #[macro_use]
 extern crate serde_derive;
@@ -14,58 +14,43 @@ use std::process;
 use actions::command::CommandAction;
 use actions::print::PrintAction;
 use actions::Action;
+use clap::Parser;
 use config::SettingsConfig;
-use docopt::Docopt;
 use files_watcher::FilesWatcher;
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Path to a TOML config file. This option is mutually exclusive to the
+    /// -p and -e options.
+    #[arg(short, long, value_name = "FILE")]
+    config: Option<PathBuf>,
 
-#[rustfmt::skip]
-const USAGE: &str = "
-Eagle Eye.
+    /// A command to execute whenever a change happens. If the command contains
+    /// one or more instances of {:p}, they will be replaced by the path to the
+    /// changed file or folder. Requires also specifying the -p option.
+    #[arg(short, long)]
+    execute: Option<String>,
 
-Usage:
-  eagle [--quiet] [--config=<cfg_path>] [--execute=<cmd>] [--path=<path>]
-  eagle (-h | --help)
-  eagle --version
+    /// Path to a file or directory to watch for changes.  Requires also specifying
+    /// the -e option.
+    #[arg(short, long, value_name = "PATH")]
+    path: Option<PathBuf>,
 
-Options:
-  -c --config=<cfg_path>  Path to a TOML config file. This option is mutually
-                          exclusive to the -p and -e options.
-  -e --execute=<cmd>      A command to execute whenever a change happens.
-                          If the command contains one or more instances of
-                          {:p}, they will be replaced by the path to the
-                          changed file or folder. Requires also specifying
-                          the -p option.
-  -h --help               Show this screen.
-  -p --path=<path>        Path to a file or directory to watch for changes.
-                          Requires also specifying the -e option.
-  -q --quiet              Do not print file change information.
-  --version               Show version.
-";
-
-#[derive(Debug, Deserialize)]
-struct Args {
-    flag_path: String,
-    flag_config: String,
-    flag_execute: String,
-    flag_help: bool,
-    flag_quiet: bool,
-    flag_version: bool,
+    /// Do not print file change information.
+    #[arg(short, long, default_value = "false")]
+    quiet: bool,
 }
 
-#[cfg_attr(test, allow(dead_code))]
+// #[cfg_attr(test)
 fn main() {
-    let version_option = Some(VERSION.to_string());
-    let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.help(true).version(version_option).deserialize())
-        .unwrap_or_else(|e| e.exit());
+    let cli = Cli::parse();
 
     let mut actions: Vec<Box<dyn Action + 'static>> = vec![];
     let mut fw = FilesWatcher::new();
 
-    if !args.flag_config.is_empty() {
-        let config = match config::parse_file(&args.flag_config) {
+    if let Some(config_path) = cli.config.as_deref() {
+        let config = match config::parse_file(config_path) {
             Some(config) => config,
             None => {
                 println!("Error parsing config file. Exiting.");
@@ -102,18 +87,20 @@ fn main() {
             fw.add_file(path_buf, actions);
         }
     } else {
-        if !args.flag_quiet {
+        let flag_quiet = cli.quiet;
+        if !flag_quiet {
             let print = PrintAction::new();
             actions.push(Box::new(print));
         }
 
-        if !args.flag_execute.is_empty() {
-            let command = CommandAction::new(args.flag_execute, args.flag_quiet);
+        if let Some(execute) = cli.execute.as_deref() {
+            let command = CommandAction::new(execute.to_string(), flag_quiet);
             actions.push(Box::new(command));
         }
 
-        let path_buf = PathBuf::from(args.flag_path);
-        fw.add_file(path_buf, actions);
+        if let Some(path) = cli.path.as_deref() {
+            fw.add_file(path.to_path_buf(), actions);
+        }
     }
 
     loop {
