@@ -11,12 +11,12 @@ pub mod files_watcher;
 use std::path::PathBuf;
 use std::process;
 
-use actions::command::CommandAction;
-use actions::print::PrintAction;
-use actions::Action;
+use crate::actions::command::CommandAction;
+use crate::actions::print::PrintAction;
+use crate::actions::Action;
 use clap::Parser;
-use config::SettingsConfig;
-use files_watcher::FilesWatcher;
+use crate::config::SettingsConfig;
+use crate::files_watcher::FilesWatcher;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]

@@ -1,4 +1,4 @@
-use actions::Action;
+use crate::actions::Action;
 use notify::op;
 use notify::op::Op;
 use notify::Event;
@@ -57,7 +57,7 @@ mod test {
 
     use super::*;
 
-    use actions::Action;
+    use crate::actions::Action;
     use notify::{Event, Op};
     use std::path::PathBuf;
 

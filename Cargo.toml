@@ -3,6 +3,7 @@ name = "eagle"
 version = "0.1.0"
 authors = ["Adam Goforth <code@adamgoforth.com>"]
 license = "MIT"
+edition = "2021"
 
 [dependencies]
 notify = "^2.4.1"

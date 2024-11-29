@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::io;
 use std::path::PathBuf;
 
-use actions::Action;
+use crate::actions::Action;
 
 pub struct FilesWatcher {
     watcher: Box<RecommendedWatcher>,
@@ -90,8 +90,8 @@ mod test {
 
     use self::rand::distributions::Alphanumeric;
     use self::rand::{thread_rng, Rng};
-    use actions::print::PrintAction;
-    use actions::Action;
+    use crate::actions::print::PrintAction;
+    use crate::actions::Action;
     use std::env::temp_dir;
     use std::fs::remove_file;
     use std::fs::File;

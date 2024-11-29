@@ -1,4 +1,4 @@
-use actions::Action;
+use crate::actions::Action;
 use notify::Event;
 use std::io::{self, Write};
 use std::process::{Command, Stdio};
@@ -83,7 +83,7 @@ mod test {
 
     use super::*;
 
-    use actions::Action;
+    use crate::actions::Action;
     use notify::{Event, Op};
     use std::path::PathBuf;
 
