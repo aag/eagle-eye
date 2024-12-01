@@ -17,9 +17,10 @@ impl CommandAction {
     }
 
     pub fn get_command_line(&self, event: &Event) -> String {
-        let path = match event.path {
-            None => "",
-            Some(ref path) => path.to_str().unwrap_or(""),
+        let path = if event.paths.is_empty() {
+            ""
+        } else {
+            event.paths[0].to_str().unwrap_or("")
         };
 
         self.command_line.replace("{:p}", path)
@@ -84,7 +85,7 @@ mod test {
     use super::*;
 
     use crate::actions::Action;
-    use notify::{Event, Op};
+    use notify::{event, Event, EventKind};
     use std::path::PathBuf;
 
     #[test]
@@ -94,13 +95,10 @@ mod test {
 
     #[test]
     fn handle_change_existing_command() {
-        let o = Op::empty();
+        let event_kind = EventKind::Modify(event::ModifyKind::Any);
         let path_buf = PathBuf::from("/");
 
-        let event = Event {
-            path: Some(path_buf),
-            op: Ok(o),
-        };
+        let event = Event::new(event_kind).add_path(path_buf);
 
         // Assume the "date" command exists on all platforms
         let command = CommandAction::new("date".to_string(), true);
@@ -113,13 +111,9 @@ mod test {
 
     #[test]
     fn handle_change_missing_command() {
-        let o = Op::empty();
+        let event_kind = EventKind::Modify(event::ModifyKind::Any);
         let path_buf = PathBuf::from("/");
-
-        let event = Event {
-            path: Some(path_buf),
-            op: Ok(o),
-        };
+        let event = Event::new(event_kind).add_path(path_buf);
 
         // Assume this command does not exist
         let command = CommandAction::new("command_does_not_exist".to_string(), true);

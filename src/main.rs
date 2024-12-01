@@ -107,7 +107,14 @@ fn main() {
         let result = fw.wait_and_execute();
 
         match result {
-            Ok(i) => println!("Executed {} action(s) successfully.", i),
+            Ok(execution_result) => {
+                if execution_result.was_file_changed {
+                    println!(
+                        "Executed {} action(s) successfully.",
+                        execution_result.num_actions
+                    );
+                }
+            }
             Err(_) => println!("Error executing some actions."),
         }
     }

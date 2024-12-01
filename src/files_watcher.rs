@@ -1,8 +1,8 @@
 extern crate libc;
 extern crate notify;
 
-use notify::{Error, Event, RecommendedWatcher, Watcher};
-use std::sync::mpsc::{channel, Receiver, RecvError};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
+use std::sync::mpsc::{Receiver, RecvError};
 
 use std::collections::HashMap;
 use std::io;
@@ -12,7 +12,7 @@ use crate::actions::Action;
 
 pub struct FilesWatcher {
     watcher: Box<RecommendedWatcher>,
-    rx: Receiver<Event>,
+    rx: Receiver<Result<Event, notify::Error>>,
     watches: HashMap<PathBuf, Vec<Box<dyn Action>>>,
 }
 
@@ -22,10 +22,15 @@ impl Default for FilesWatcher {
     }
 }
 
+pub struct EventExecutionResult {
+    pub num_actions: usize,
+    pub was_file_changed: bool,
+}
+
 impl FilesWatcher {
     pub fn new() -> FilesWatcher {
-        let (tx, rx) = channel();
-        let watcher: Result<RecommendedWatcher, Error> = Watcher::new(tx);
+        let (tx, rx) = std::sync::mpsc::channel();
+        let watcher = notify::recommended_watcher(tx);
 
         FilesWatcher {
             watcher: Box::new(watcher.unwrap()),
@@ -36,7 +41,8 @@ impl FilesWatcher {
 
     // TODO: accept a Vec of paths
     pub fn add_file(&mut self, path: PathBuf, actions: Vec<Box<dyn Action>>) {
-        let result = self.watcher.watch(&path);
+        // TODO: Support running actions on all files in a directory tree.
+        let result = self.watcher.watch(&path, RecursiveMode::NonRecursive);
 
         if result.is_ok() {
             println!("Watching file: {:?}", path);
@@ -46,11 +52,11 @@ impl FilesWatcher {
         }
     }
 
-    pub fn wait_for_events(&mut self) -> Result<Event, RecvError> {
+    pub fn wait_for_events(&mut self) -> Result<Result<Event, notify::Error>, RecvError> {
         self.rx.recv()
     }
 
-    pub fn wait_and_execute(&mut self) -> Result<i32, io::Error> {
+    pub fn wait_and_execute(&mut self) -> Result<EventExecutionResult, io::Error> {
         let mut num_actions = 0;
         let event_result = self.rx.recv();
 
@@ -59,10 +65,25 @@ impl FilesWatcher {
                 io::ErrorKind::Other,
                 "Error receiving event",
             )),
-            Ok(event) => {
-                match event.path {
-                    None => println!("Warning: event has no path"),
-                    Some(ref path) => {
+            Ok(event) => match event {
+                Err(_) => Err(io::Error::new(io::ErrorKind::Other, "Error in file event")),
+                Ok(event) => {
+                    if !is_file_changed_event(&event) {
+                        return Ok(EventExecutionResult {
+                            num_actions: 0,
+                            was_file_changed: false,
+                        });
+                    }
+
+                    if event.paths.is_empty() {
+                        println!("Warning: event has no paths");
+                        return Ok(EventExecutionResult {
+                            num_actions: 0,
+                            was_file_changed: true,
+                        });
+                    }
+
+                    for path in event.paths.iter() {
                         let actions = self.watches.get(path);
                         if actions.is_some() {
                             for action in actions.unwrap() {
@@ -74,12 +95,20 @@ impl FilesWatcher {
                             println!("Error: no actions found for path: {:?}", path.display());
                         }
                     }
-                }
 
-                Ok(num_actions)
-            }
+                    Ok(EventExecutionResult {
+                        num_actions,
+                        was_file_changed: true,
+                    })
+                }
+            },
         }
     }
+}
+
+/// Returns true if the event is for a file change. Just opening or accessing a file does not count.
+fn is_file_changed_event(event: &Event) -> bool {
+    event.kind.is_modify() || event.kind.is_create() || event.kind.is_remove()
 }
 
 #[cfg(test)]
@@ -92,9 +121,12 @@ mod test {
     use self::rand::{thread_rng, Rng};
     use crate::actions::print::PrintAction;
     use crate::actions::Action;
+    use notify::{event, EventKind};
     use std::env::temp_dir;
     use std::fs::remove_file;
     use std::fs::File;
+    use std::fs::OpenOptions;
+    use std::io::Read;
     use std::io::Write;
     use std::path::Path;
     use std::path::PathBuf;
@@ -111,13 +143,12 @@ mod test {
         write_to(&mut file);
 
         {
-            let event = fw.wait_for_events().unwrap();
-            match event.path {
-                None => panic!("Error: event has no path"),
-                Some(event_path) => {
-                    assert_eq!(filepath, event_path);
-                }
+            let event = fw.wait_for_events().unwrap().unwrap();
+            if event.paths.is_empty() {
+                panic!("Error: event has no paths");
             }
+
+            assert_eq!(&filepath, event.paths.first().unwrap());
         }
 
         remove_temp_file(&filepath);
@@ -141,21 +172,17 @@ mod test {
         write_to(&mut file2);
 
         {
-            let event = fw.wait_for_events().unwrap();
-            match event.path {
-                None => panic!("Error: event has no path"),
-                Some(event_path) => {
-                    assert_eq!(filepath1, event_path);
-                }
+            let event = fw.wait_for_events().unwrap().unwrap();
+            if event.paths.is_empty() {
+                panic!("Error: event has no paths");
             }
+            assert_eq!(&filepath1, event.paths.first().unwrap());
 
-            let event = fw.wait_for_events().unwrap();
-            match event.path {
-                None => panic!("Error: event has no path"),
-                Some(event_path) => {
-                    assert_eq!(filepath2, event_path);
-                }
+            let event = fw.wait_for_events().unwrap().unwrap();
+            if event.paths.is_empty() {
+                panic!("Error: event has no paths");
             }
+            assert_eq!(&filepath2, event.paths.first().unwrap());
         }
 
         remove_temp_file(&filepath1);
@@ -175,7 +202,30 @@ mod test {
 
         {
             let actions_executed = fw.wait_and_execute().unwrap();
-            assert_eq!(0, actions_executed);
+            assert_eq!(0, actions_executed.num_actions);
+            assert!(actions_executed.was_file_changed);
+        }
+
+        remove_temp_file(&filepath);
+    }
+
+    #[test]
+    fn watch_file_and_execute_no_file_change() {
+        let (path, _file) = create_temp_file();
+        let filepath = path.clone();
+
+        let mut fw = FilesWatcher::new();
+
+        let print = PrintAction::new();
+        let actions: Vec<Box<dyn Action + 'static>> = vec![Box::new(print)];
+        fw.add_file(path, actions);
+
+        read_file(&filepath);
+
+        {
+            let execution_result = fw.wait_and_execute().unwrap();
+            assert_eq!(0, execution_result.num_actions);
+            assert!(!execution_result.was_file_changed);
         }
 
         remove_temp_file(&filepath);
@@ -195,8 +245,9 @@ mod test {
         write_to(&mut file);
 
         {
-            let actions_executed = fw.wait_and_execute().unwrap();
-            assert_eq!(1, actions_executed);
+            let execution_result = fw.wait_and_execute().unwrap();
+            assert_eq!(1, execution_result.num_actions);
+            assert!(execution_result.was_file_changed);
         }
 
         remove_temp_file(&filepath);
@@ -227,11 +278,26 @@ mod test {
         write_to(&mut file);
 
         {
-            let actions_executed = fw.wait_and_execute().unwrap();
-            assert_eq!(5, actions_executed);
+            let execution_result = fw.wait_and_execute().unwrap();
+            assert_eq!(5, execution_result.num_actions);
+            assert!(execution_result.was_file_changed);
         }
 
         remove_temp_file(&filepath);
+    }
+
+    #[test]
+    fn is_file_changed_event_read_access() {
+        assert!(!is_file_changed_event(&Event::new(EventKind::Access(
+            event::AccessKind::Read
+        ))));
+    }
+
+    #[test]
+    fn is_file_changed_event_modified() {
+        assert!(is_file_changed_event(&Event::new(EventKind::Modify(
+            event::ModifyKind::Any
+        ))));
     }
 
     fn create_temp_file() -> (PathBuf, File) {
@@ -243,7 +309,15 @@ mod test {
 
         let filename = "eagleeye-test-".to_string() + &rand_part;
         let path = temp_dir().join(filename);
-        let file = File::create(&path)
+        // let file = File::create(&path)
+        //     .unwrap_or_else(|error| panic!("Failed to create temporary file: {}", error));
+
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&path)
             .unwrap_or_else(|error| panic!("Failed to create temporary file: {}", error));
 
         (path, file)
@@ -259,5 +333,11 @@ mod test {
             .unwrap_or_else(|error| panic!("Failed to write to file: {}", error));
 
         file.flush().unwrap();
+    }
+
+    fn read_file(path: &Path) {
+        let mut data = vec![];
+        let mut file = File::open(path).unwrap();
+        file.read_to_end(&mut data).unwrap();
     }
 }

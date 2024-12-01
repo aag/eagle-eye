@@ -1,7 +1,5 @@
 use crate::actions::Action;
-use notify::op;
-use notify::op::Op;
-use notify::Event;
+use notify::{Event, EventKind};
 
 pub struct PrintAction;
 
@@ -10,13 +8,12 @@ impl PrintAction {
         PrintAction
     }
 
-    pub fn flag_to_str(&self, flag: &Op) -> &'static str {
-        match *flag {
-            op::CHMOD => "Permissions or timestamps changed",
-            op::CREATE => "File or directory created",
-            op::REMOVE => "File or directory removed",
-            op::RENAME => "File or directory renamed",
-            op::WRITE => "File or diretory written to",
+    pub fn event_kind_to_str(&self, kind: &EventKind) -> &'static str {
+        match *kind {
+            EventKind::Access(_) => "File or directory accessed",
+            EventKind::Create(_) => "File or directory created",
+            EventKind::Modify(_) => "File or directory modified",
+            EventKind::Remove(_) => "File or directory removed",
             _ => "Unknown change",
         }
     }
@@ -30,24 +27,17 @@ impl Default for PrintAction {
 
 impl Action for PrintAction {
     fn handle_change(&self, event: &Event) -> Result<(), &'static str> {
-        match event.path {
-            None => {
-                println!("No path for event");
-                Err("No path for event")
-            }
-            Some(ref path) => {
-                let message = match event.op {
-                    Ok(op) => self.flag_to_str(&op),
-                    Err(_) => "Unknown change",
-                };
-
-                let path_str = path.to_str().unwrap_or("Unknown path");
-
-                println!("{} on path {:?}", message, path_str);
-
-                Ok(())
-            }
+        if event.paths.is_empty() {
+            println!("No path for event");
+            return Err("No path for event");
         }
+
+        for path in event.paths.iter() {
+            let message = self.event_kind_to_str(&event.kind);
+            println!("{} on path {:?}", message, path);
+        }
+
+        Ok(())
     }
 }
 
@@ -58,7 +48,7 @@ mod test {
     use super::*;
 
     use crate::actions::Action;
-    use notify::{Event, Op};
+    use notify::{event, Event, EventKind};
     use std::path::PathBuf;
 
     #[test]
@@ -69,13 +59,9 @@ mod test {
 
     #[test]
     fn handle_change() {
-        let o = Op::empty();
+        let event_kind = EventKind::Modify(event::ModifyKind::Any);
         let path_buf = PathBuf::from("/");
-
-        let event = Event {
-            path: Some(path_buf),
-            op: Ok(o),
-        };
+        let event = Event::new(event_kind).add_path(path_buf);
 
         let print = PrintAction::new();
         let result = print.handle_change(&event);
