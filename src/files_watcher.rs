@@ -84,9 +84,8 @@ impl FilesWatcher {
                     }
 
                     for path in event.paths.iter() {
-                        let actions = self.watches.get(path);
-                        if actions.is_some() {
-                            for action in actions.unwrap() {
+                        if let Some(actions) = self.watches.get(path) {
+                            for action in actions {
                                 if action.handle_change(&event).is_ok() {
                                     num_actions += 1;
                                 }
