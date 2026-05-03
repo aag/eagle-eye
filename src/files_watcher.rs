@@ -113,8 +113,8 @@ mod test {
 
     use super::*;
 
-    use self::rand::distributions::Alphanumeric;
-    use self::rand::{thread_rng, Rng};
+    use self::rand::distr::Alphanumeric;
+    use self::rand::{rng, RngExt};
     use crate::actions::print::PrintAction;
     use crate::actions::Action;
     use notify::{event, EventKind};
@@ -297,7 +297,7 @@ mod test {
     }
 
     fn create_temp_file() -> (PathBuf, File) {
-        let rand_part: String = thread_rng()
+        let rand_part: String = rng()
             .sample_iter(&Alphanumeric)
             .take(8)
             .map(char::from)
