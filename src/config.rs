@@ -23,10 +23,7 @@ pub struct WatcherSettings {
 }
 
 pub fn parse(config_content: String) -> Option<Config> {
-    match toml::from_str(&config_content) {
-        Ok(config) => Some(config),
-        Err(_) => None,
-    }
+    toml::from_str(&config_content).ok()
 }
 
 pub fn parse_file(path: &Path) -> Option<Config> {

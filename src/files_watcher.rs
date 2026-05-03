@@ -61,12 +61,9 @@ impl FilesWatcher {
         let event_result = self.rx.recv();
 
         match event_result {
-            Err(_) => Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Error receiving event",
-            )),
+            Err(_) => Err(io::Error::other("Error receiving event")),
             Ok(event) => match event {
-                Err(_) => Err(io::Error::new(io::ErrorKind::Other, "Error in file event")),
+                Err(_) => Err(io::Error::other("Error in file event")),
                 Ok(event) => {
                     if !is_file_changed_event(&event) {
                         return Ok(EventExecutionResult {
