@@ -11,9 +11,9 @@ pub mod files_watcher;
 use std::path::PathBuf;
 use std::process;
 
+use crate::actions::Action;
 use crate::actions::command::CommandAction;
 use crate::actions::print::PrintAction;
-use crate::actions::Action;
 use crate::config::SettingsConfig;
 use crate::files_watcher::FilesWatcher;
 use clap::Parser;

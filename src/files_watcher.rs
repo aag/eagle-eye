@@ -114,14 +114,14 @@ mod test {
     use super::*;
 
     use self::rand::distr::Alphanumeric;
-    use self::rand::{rng, RngExt};
-    use crate::actions::print::PrintAction;
+    use self::rand::{RngExt, rng};
     use crate::actions::Action;
-    use notify::{event, EventKind};
+    use crate::actions::print::PrintAction;
+    use notify::{EventKind, event};
     use std::env::temp_dir;
-    use std::fs::remove_file;
     use std::fs::File;
     use std::fs::OpenOptions;
+    use std::fs::remove_file;
     use std::io::Read;
     use std::io::Write;
     use std::path::Path;

@@ -48,7 +48,7 @@ mod test {
     use super::*;
 
     use crate::actions::Action;
-    use notify::{event, Event, EventKind};
+    use notify::{Event, EventKind, event};
     use std::path::PathBuf;
 
     #[test]
